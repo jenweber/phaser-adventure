@@ -36,9 +36,9 @@ const theGame = function () {
     this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'assets/star.png');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.spritesheet('dude', 'assets/dude.png', {
+    this.load.spritesheet('fox', 'assets/FoxSpriteSheet.png', {
       frameWidth: 32,
-      frameHeight: 48,
+      frameHeight: 32,
     });
   }
 
@@ -59,29 +59,39 @@ const theGame = function () {
     platforms.create(750, 220, 'ground');
 
     // The player and its settings
-    player = this.physics.add.sprite(100, 450, 'dude');
+    player = this.physics.add.sprite(100, 450, 'fox');
 
     //  Player physics properties. Give the little guy a slight bounce.
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
+    // player.setScale(3);
 
     //  Our player animations, turning, walking left and walking right.
     this.anims.create({
+      key: 'idle',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [0, 1, 2, 3, 4],
+      }),
+      frameRate: 8,
+      repeat: -1,
+    });
+
+    this.anims.create({
       key: 'left',
-      frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+      frames: this.anims.generateFrameNumbers('fox', { start: 0, end: 3 }),
       frameRate: 10,
       repeat: -1,
     });
 
     this.anims.create({
       key: 'turn',
-      frames: [{ key: 'dude', frame: 4 }],
+      frames: [{ key: 'fox', frame: 4 }],
       frameRate: 20,
     });
 
     this.anims.create({
       key: 'right',
-      frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+      frames: this.anims.generateFrameNumbers('fox', { start: 5, end: 8 }),
       frameRate: 10,
       repeat: -1,
     });
@@ -121,6 +131,7 @@ const theGame = function () {
   }
 
   function update() {
+    player.anims.play('idle');
     if (gameOver) {
       return;
     }
@@ -136,7 +147,7 @@ const theGame = function () {
     } else {
       player.setVelocityX(0);
 
-      player.anims.play('turn');
+      player.anims.play('idle');
     }
 
     if (cursors.up.isDown && player.body.touching.down) {
