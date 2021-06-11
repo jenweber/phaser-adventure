@@ -171,15 +171,15 @@ const theGame = function () {
       return;
     }
 
-    if (cursors.left.isDown) {
-      player.setVelocityX(-160);
-
-      player.anims.play('left', true);
-    } else if (cursors.up.isDown) {
+    if (cursors.up.isDown) {
       player.anims.play('jump', true);
+    } else if (cursors.left.isDown) {
+      player.setVelocityX(-160);
+      player.setFlip(true, false);
+      player.anims.play('right', true);
     } else if (cursors.right.isDown) {
       player.setVelocityX(160);
-
+      player.setFlip(false, false);
       player.anims.play('right', true);
     } else {
       player.setVelocityX(0);
