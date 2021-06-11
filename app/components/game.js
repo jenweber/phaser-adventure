@@ -9,7 +9,7 @@ const theGame = function () {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 300 },
+        gravity: { y: 800 },
         debug: false,
       },
     },
@@ -59,12 +59,12 @@ const theGame = function () {
     platforms.create(750, 220, 'ground');
 
     // The player and its settings
-    player = this.physics.add.sprite(100, 450, 'fox');
+    player = this.physics.add.sprite(100, 450);
 
     //  Player physics properties. Give the little guy a slight bounce.
-    player.setBounce(0.2);
+    // player.setBounce(0.2);
     player.setCollideWorldBounds(true);
-    // player.setScale(3);
+    player.setScale(3);
 
     //  Our player animations, turning, walking left and walking right.
     this.anims.create({
@@ -72,28 +72,63 @@ const theGame = function () {
       frames: this.anims.generateFrameNumbers('fox', {
         frames: [0, 1, 2, 3, 4],
       }),
+      frameRate: 6,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'idle2',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],
+      }),
+      frameRate: 6,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'right',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [28, 29, 30, 31, 32, 33, 34, 35],
+      }),
       frameRate: 8,
       repeat: -1,
     });
 
     this.anims.create({
-      key: 'left',
-      frames: this.anims.generateFrameNumbers('fox', { start: 0, end: 3 }),
-      frameRate: 10,
+      key: 'jump',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [/*42, 43, 44,*/ 45, 46, 47, 48, /*49, 50, 51, 52*/],
+      }),
+      frameRate: 8,
       repeat: -1,
     });
 
     this.anims.create({
-      key: 'turn',
-      frames: [{ key: 'fox', frame: 4 }],
-      frameRate: 20,
+      key: 'bark',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [56, 57, 58, 59, 60],
+      }),
+      frameRate: 8,
+      repeat: -1,
     });
 
     this.anims.create({
-      key: 'right',
-      frames: this.anims.generateFrameNumbers('fox', { start: 5, end: 8 }),
-      frameRate: 10,
+      key: 'sleep',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [70, 71, 72, 73, 74, 75],
+      }),
+      frameRate: 8,
       repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'gameover',
+      frames: this.anims.generateFrameNumbers('fox', {
+        frames: [30, 31],
+      }),
+      frameRate: 8,
+      repeat: -1,
+      repeatDelay: 2000,
     });
 
     //  Input Events
@@ -128,10 +163,10 @@ const theGame = function () {
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
     this.physics.add.collider(player, bombs, hitBomb, null, this);
+    player.anims.play('idle');
   }
 
   function update() {
-    player.anims.play('idle');
     if (gameOver) {
       return;
     }
@@ -140,18 +175,19 @@ const theGame = function () {
       player.setVelocityX(-160);
 
       player.anims.play('left', true);
+    } else if (cursors.up.isDown) {
+      player.anims.play('jump', true);
     } else if (cursors.right.isDown) {
       player.setVelocityX(160);
 
       player.anims.play('right', true);
     } else {
       player.setVelocityX(0);
-
-      player.anims.play('idle');
+      player.anims.play('idle', true);
     }
 
     if (cursors.up.isDown && player.body.touching.down) {
-      player.setVelocityY(-330);
+      player.setVelocityY(-200);
     }
   }
 
