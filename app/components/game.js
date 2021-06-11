@@ -100,7 +100,7 @@ const theGame = function () {
         frames: [/*42, 43, 44,*/ 45, 46, 47, 48, /*49, 50, 51, 52*/],
       }),
       frameRate: 8,
-      repeat: -1,
+      repeat: 0,
     });
 
     this.anims.create({
