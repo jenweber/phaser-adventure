@@ -9,7 +9,7 @@ const theGame = function () {
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { y: 800 },
+        gravity: { y: 0 },
         debug: false,
       },
     },
@@ -21,9 +21,7 @@ const theGame = function () {
   };
 
   var player;
-  var stars;
-  var bombs;
-  var platforms;
+  var asteroids;
   var cursors;
   var score = 0;
   var gameOver = false;
@@ -33,6 +31,8 @@ const theGame = function () {
 
   function preload() {
     this.load.image('sky', 'assets/sky.png');
+    this.load.image('ground', 'assets/platform.png');
+    this.load.image('asteroid', 'assets/star.png');
     this.load.spritesheet('fox', 'assets/FoxSpriteSheet.png', {
       frameWidth: 32,
       frameHeight: 32,
@@ -43,27 +43,15 @@ const theGame = function () {
     //  A simple background for our game
     this.add.image(400, 300, 'sky');
 
-    //  The platforms group contains the ground and the 2 ledges we can jump on
-    platforms = this.physics.add.staticGroup();
-
-    //  Here we create the ground.
-    //  Scale it to fit the width of the game (the original sprite is 400x32 in size)
-    platforms.create(400, 568, 'ground').setScale(2).refreshBody();
-
-    //  Now let's create some ledges
-    platforms.create(600, 400, 'ground');
-    platforms.create(50, 250, 'ground');
-    platforms.create(750, 220, 'ground');
-
     // The player and its settings
     player = this.physics.add.sprite(100, 450);
 
     //  Player physics properties. Give the little guy a slight bounce.
     // player.setBounce(0.2);
     player.setCollideWorldBounds(true);
-    player.setScale(5);
+    player.setScale(2);
     // debugger
-    player.body.setOffset(0, 10)
+    player.body.setOffset(0, 10);
     // player.body.offset = { y: 10, x: 0 }
 
     //  Our player animations, turning, walking left and walking right.
@@ -97,7 +85,7 @@ const theGame = function () {
     this.anims.create({
       key: 'jump',
       frames: this.anims.generateFrameNumbers('fox', {
-        frames: [/*42, 43, 44,*/ 45, 46, 47, 48, /*49, 50, 51, 52*/],
+        frames: [/*42, 43, 44,*/ 45, 46, 47, 48 /*49, 50, 51, 52*/],
       }),
       frameRate: 8,
       repeat: 0,
@@ -134,19 +122,17 @@ const theGame = function () {
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
 
-    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-    stars = this.physics.add.group({
-      key: 'star',
+    //  Some asteroids to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    asteroids = this.physics.add.group({
+      key: 'asteroid',
       repeat: 11,
       setXY: { x: 12, y: 0, stepX: 70 },
     });
 
-    stars.children.iterate(function (child) {
-      //  Give each star a slightly different bounce
+    asteroids.children.iterate(function (child) {
+      //  Give each asteroid a slightly different bounce
       child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
-
-    bombs = this.physics.add.group();
 
     //  The score
     scoreText = this.add.text(16, 16, 'score: 0', {
@@ -154,19 +140,16 @@ const theGame = function () {
       fill: '#000',
     });
 
-    //  Collide the player and the stars with the platforms
-    this.physics.add.collider(player, platforms);
-    this.physics.add.collider(stars, platforms);
-    this.physics.add.collider(bombs, platforms);
+    //  Checks to see if the player overlaps with any of the asteroids, if he does call the collectasteroid function
+    // this.physics.add.overlap(player, asteroids, collectasteroid, null, this);
 
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    // this.physics.add.overlap(player, stars, collectStar, null, this);
-
-    this.physics.add.collider(stars, player);
-
-    this.physics.add.collider(player, bombs, hitBomb, null, this);
+    this.physics.add.collider(asteroids, player);
     player.anims.play('idle');
   }
+
+  let velocityX = 0;
+  let velocityY = 0;
+  const increment = 5;
 
   function update() {
     if (gameOver) {
@@ -174,59 +157,39 @@ const theGame = function () {
     }
 
     if (cursors.up.isDown) {
-      player.anims.play('jump', true);
+      velocityY -= increment;
+      player.setVelocityY(velocityY);
     } else if (cursors.left.isDown) {
-      player.setVelocityX(-160);
+      velocityX -= increment;
+      player.setVelocityX(velocityX);
       player.setFlip(true, false);
       player.anims.play('right', true);
     } else if (cursors.right.isDown) {
-      player.setVelocityX(160);
+      velocityX += increment;
+      player.setVelocityX(velocityX);
       player.setFlip(false, false);
       player.anims.play('right', true);
+    } else if (cursors.down.isDown) {
+      velocityY += increment;
+      player.setVelocityY(velocityY);
     } else {
-      player.setVelocityX(0);
       player.anims.play('idle', true);
-    }
-
-    if (cursors.up.isDown && player.body.touching.down) {
-      player.setVelocityY(-200);
     }
   }
 
-  function collectStar(player, star) {
-    star.disableBody(true, true);
+  function collectAsteroid(player, asteroid) {
+    asteroid.disableBody(true, true);
 
     //  Add and update the score
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    if (stars.countActive(true) === 0) {
-      //  A new batch of stars to collect
-      stars.children.iterate(function (child) {
+    if (asteroids.countActive(true) === 0) {
+      //  A new batch of asteroids to collect
+      asteroids.children.iterate(function (child) {
         child.enableBody(true, child.x, 0, true, true);
       });
-
-      var x =
-        player.x < 400
-          ? Phaser.Math.Between(400, 800)
-          : Phaser.Math.Between(0, 400);
-
-      var bomb = bombs.create(x, 16, 'bomb');
-      bomb.setBounce(1);
-      bomb.setCollideWorldBounds(true);
-      bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
-      bomb.allowGravity = false;
     }
-  }
-
-  function hitBomb(player, bomb) {
-    this.physics.pause();
-
-    player.setTint(0xff0000);
-
-    player.anims.play('turn');
-
-    gameOver = true;
   }
 };
 
